@@ -1,0 +1,22 @@
+# Build outputs
+bin/
+obj/
+
+# Databases (VERY IMPORTANT for your project)
+*.db
+*.sqlite
+*.db-shm
+*.db-wal
+
+# Visual Studio
+.vs/
+
+# User secrets
+appsettings.Development.json
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,49 @@
+﻿@model PersonalFinanceTracker.Models.ViewModels.FinanceSummaryViewModel
+
+@{
+    ViewData["Title"] = "Summary";
+}
+
+<div class="container mt-4">
+
+    <h1 class="mb-4">📄 Financial Summary</h1>
+
+    <div class="row">
+
+        <div class="col-md-4">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5>Total Income</h5>
+                    <h2>@Model.TotalIncome.ToString("C")</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-danger mb-3">
+                <div class="card-body">
+                    <h5>Total Expenses</h5>
+                    <h2>@Model.TotalExpense.ToString("C")</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5>Balance</h5>
+                    <h2>@Model.Balance.ToString("C")</h2>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="card mt-3">
+        <div class="card-body text-center">
+            <h5>Total Transactions</h5>
+            <h2>@Model.TransactionCount</h2>
+        </div>
+    </div>
+
+</div>
