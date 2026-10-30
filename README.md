@@ -106,6 +106,3 @@ PersonalFinanceTracker.Web/
   wwwroot/                  site.css, site.js, logo
 ```
 
-## Repository note
-
-Your Git repository was inside the project folder, so the solution file, tests and Dockerfile sat outside it. Move `.git` up one level so the repository root is this folder (the one containing `PersonalFinanceTracker.Web.slnx`). The CI workflow expects that layout.
