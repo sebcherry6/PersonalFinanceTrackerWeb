@@ -1,0 +1,117 @@
+@model TransactionListViewModel
+@*
+    Transaction list with search, type filter and paging.
+    Filtering happens on the server (GET form), so it works without JavaScript and across pages.
+*@
+@{
+    var r = Model.Results;
+    var filtered = !string.IsNullOrWhiteSpace(Model.Search) || Model.Type is not null;
+}
+
+<div class="page-head">
+    <div>
+        <h1>Transactions</h1>
+        <p class="muted">@r.TotalCount @(r.TotalCount == 1 ? "transaction" : "transactions")@(filtered ? " match" : "")</p>
+    </div>
+    <div class="actions">
+        @if (r.TotalCount > 0)
+        {
+            <a class="button button--quiet" asp-action="Export">Download CSV</a>
+        }
+        <a class="button" asp-action="Create">Add transaction</a>
+    </div>
+</div>
+
+<form class="panel form-inline" method="get" asp-action="Index" role="search">
+    <div class="field">
+        <label for="q">Search descriptions</label>
+        <input id="q" name="q" class="input" value="@Model.Search" maxlength="100" placeholder="e.g. rent, coffee" />
+    </div>
+    <div class="field">
+        <label for="type">Show</label>
+        <select id="type" name="type" class="select">
+            @* "!" opts these out of tag helpers, so selected="false" is simply left off. *@
+            <!option value="">Everything</!option>
+            <!option value="Expense" selected="@(Model.Type == TransactionType.Expense)">Money out</!option>
+            <!option value="Income" selected="@(Model.Type == TransactionType.Income)">Money in</!option>
+        </select>
+    </div>
+    <button type="submit" class="button button--quiet">Filter</button>
+    @if (filtered)
+    {
+        <a asp-action="Index">Clear</a>
+    }
+</form>
+
+@if (r.TotalCount == 0)
+{
+    <div class="panel empty">
+        @if (filtered)
+        {
+            <h2>No matches</h2>
+            <p class="muted">Try a different word, or clear the filter.</p>
+        }
+        else
+        {
+            <h2>No transactions yet</h2>
+            <p class="muted">Record what comes in and goes out, and your overview, budgets and insights fill in from here.</p>
+            <a class="button" asp-action="Create">Add your first transaction</a>
+        }
+    </div>
+}
+else
+{
+    <div class="panel">
+        <div class="table-wrap">
+            <table class="ledger ledger--responsive">
+                <thead>
+                    <tr>
+                        <th scope="col">Date</th>
+                        <th scope="col">Description</th>
+                        <th scope="col">Category</th>
+                        <th scope="col" class="num">Amount</th>
+                        <th scope="col"><span class="visually-hidden">Actions</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in r.Items)
+                    {
+                        <tr>
+                            <td class="date">@ViewHelpers.ShortDate(t.Date)</td>
+                            <td class="desc">@t.Description</td>
+                            <td class="cat"><span class="tag">@t.Category</span></td>
+                            <td class="num amount @(t.Type == TransactionType.Income ? "amount--in" : "amount--out")">@Prefs.FormatSigned(t.Amount, t.Type)</td>
+                            <td class="row-actions">
+                                <a asp-action="Edit" asp-route-id="@t.Id">Edit<span class="visually-hidden"> @t.Description</span></a>
+                                <a asp-action="Delete" asp-route-id="@t.Id">Delete<span class="visually-hidden"> @t.Description</span></a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (r.TotalPages > 1)
+        {
+            <nav class="pager" aria-label="Pages">
+                @if (r.HasPrevious)
+                {
+                    <a class="button button--quiet button--small" asp-action="Index" asp-route-q="@Model.Search" asp-route-type="@Model.Type" asp-route-page="@(r.Page - 1)">Newer</a>
+                }
+                else
+                {
+                    <span></span>
+                }
+                <span class="muted small">Page @r.Page of @r.TotalPages</span>
+                @if (r.HasNext)
+                {
+                    <a class="button button--quiet button--small" asp-action="Index" asp-route-q="@Model.Search" asp-route-type="@Model.Type" asp-route-page="@(r.Page + 1)">Older</a>
+                }
+                else
+                {
+                    <span></span>
+                }
+            </nav>
+        }
+    </div>
+}

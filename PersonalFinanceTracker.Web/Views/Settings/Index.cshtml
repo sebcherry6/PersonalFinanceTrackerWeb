@@ -1,0 +1,58 @@
+@model SettingsViewModel
+
+<div class="page-head">
+    <div>
+        <h1>Settings</h1>
+        <p class="muted">Signed in as @Model.Email</p>
+    </div>
+</div>
+
+<section class="panel" aria-labelledby="display-heading">
+    <h2 id="display-heading">Display</h2>
+
+    @* Only Theme and Currency are posted. The server knows who you are from your sign-in. *@
+    <form asp-action="Index" method="post" novalidate>
+        <fieldset class="field">
+            <legend>Theme</legend>
+            <div class="segmented">
+                <input type="radio" id="theme-system" asp-for="Preferences.Theme" value="system" />
+                <label for="theme-system">Match device</label>
+                <input type="radio" id="theme-light" asp-for="Preferences.Theme" value="light" />
+                <label for="theme-light">Light</label>
+                <input type="radio" id="theme-dark" asp-for="Preferences.Theme" value="dark" />
+                <label for="theme-dark">Dark</label>
+            </div>
+            <span asp-validation-for="Preferences.Theme" class="field-validation-error"></span>
+        </fieldset>
+
+        <div class="field">
+            <label asp-for="Preferences.Currency">Currency symbol</label>
+            <span class="hint">Changes how amounts are shown. It doesn't convert existing amounts.</span>
+            <select asp-for="Preferences.Currency" class="select"
+                    asp-items="@(PreferenceOptions.Currencies.Select(c => new SelectListItem($"{c.Key} ({c.Value})", c.Key)))"></select>
+            <span asp-validation-for="Preferences.Currency" class="field-validation-error"></span>
+        </div>
+
+        <button type="submit" class="button">Save settings</button>
+    </form>
+</section>
+
+<section class="panel" aria-labelledby="data-heading">
+    <h2 id="data-heading">Your data</h2>
+    <p>Download every transaction as a spreadsheet-friendly CSV file.</p>
+    <a class="button button--quiet" asp-controller="Transactions" asp-action="Export">Download CSV</a>
+</section>
+
+<section class="panel danger" aria-labelledby="delete-heading">
+    <h2 id="delete-heading">Delete account</h2>
+    <p>This permanently deletes your account and every transaction, budget and goal in it. It can't be undone.</p>
+
+    <form asp-action="DeleteAccount" method="post" novalidate
+          data-confirm="Delete your account and all of its data? This can't be undone.">
+        <div class="field">
+            <label asp-for="DeleteAccount.Password">Your password</label>
+            <input asp-for="DeleteAccount.Password" class="input" autocomplete="current-password" />
+        </div>
+        <button type="submit" class="button button--danger">Delete my account</button>
+    </form>
+</section>

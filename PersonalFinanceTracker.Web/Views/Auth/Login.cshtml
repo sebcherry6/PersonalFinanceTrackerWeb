@@ -1,0 +1,37 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Sign in";
+}
+<a class="brand" asp-controller="Auth" asp-action="Login">
+    <img src="~/img/cherry-logo.svg" alt="" width="40" height="40" />
+    <span class="brand__name">FinanceTracker <span class="brand__by">by WebCherry</span></span>
+</a>
+
+<h1>Sign in</h1>
+<p class="muted">See where your money goes each month.</p>
+
+@* The form tag helper adds the hidden anti-forgery token automatically. *@
+<form asp-action="Login" method="post" novalidate>
+    <div asp-validation-summary="ModelOnly" class="validation-summary-errors" role="alert"></div>
+    <input type="hidden" asp-for="ReturnUrl" />
+
+    <div class="field">
+        <label asp-for="Email">Email</label>
+        <input asp-for="Email" class="input" autocomplete="username" autofocus />
+        <span asp-validation-for="Email" class="field-validation-error"></span>
+    </div>
+
+    <div class="field">
+        <label asp-for="Password">Password</label>
+        <input asp-for="Password" class="input" autocomplete="current-password" />
+        <span asp-validation-for="Password" class="field-validation-error"></span>
+    </div>
+
+    <div class="field">
+        <label class="check"><input asp-for="RememberMe" /> Keep me signed in on this device</label>
+    </div>
+
+    <button type="submit" class="button button--block">Sign in</button>
+</form>
+
+<p class="switch">New here? <a asp-action="Register">Create an account</a></p>

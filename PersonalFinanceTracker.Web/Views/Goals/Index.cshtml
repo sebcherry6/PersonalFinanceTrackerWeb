@@ -1,0 +1,67 @@
+@model GoalsViewModel
+@*
+    Savings goals. "Add" and "Withdraw" share one form; the Withdraw button sends
+    Withdraw=true. (site.js waits a tick before disabling buttons so that value is kept.)
+*@
+
+<div class="page-head">
+    <div>
+        <h1>Goals</h1>
+        <p class="muted">Put money aside for the things you're saving towards.</p>
+    </div>
+</div>
+
+@if (Model.Goals.Count > 0)
+{
+    <div class="cards">
+        @foreach (var g in Model.Goals)
+        {
+            // Computed here because a "..." string inside model="..." would end the HTML attribute.
+            var tone = g.IsComplete ? "done" : "neutral";
+            <section class="panel" aria-labelledby="goal-@g.Id">
+                <h2 id="goal-@g.Id">@g.Name</h2>
+                <div class="card-figures">
+                    <span class="big figure @(g.IsComplete ? "amount--in" : null)">@Prefs.Format(g.SavedAmount)</span>
+                    <span class="muted">of @Prefs.Format(g.TargetAmount)</span>
+                </div>
+                <partial name="_Bar" model="new BarModel(g.SavedAmount, g.TargetAmount, tone)" />
+                <p class="small @(g.IsComplete ? "amount--in" : "muted")">
+                    @(g.IsComplete ? "Goal reached." : $"{Prefs.Format(g.TargetAmount - g.SavedAmount)} to go")
+                </p>
+
+                <form asp-action="Contribute" asp-route-id="@g.Id" method="post" class="contribute" novalidate>
+                    <label class="visually-hidden" for="amount-@g.Id">Amount for @g.Name</label>
+                    <input id="amount-@g.Id" name="Amount" class="input" type="number" inputmode="decimal"
+                           step="0.01" min="0.01" placeholder="@Prefs.Symbol" required />
+                    <button type="submit" class="button button--small">Add</button>
+                    <button type="submit" name="Withdraw" value="true" class="button button--quiet button--small">Withdraw</button>
+                </form>
+
+                <div class="card-foot">
+                    <span></span>
+                    <form asp-action="Delete" asp-route-id="@g.Id" method="post" class="inline-form"
+                          data-confirm="Delete the goal &quot;@g.Name&quot;?">
+                        <button type="submit" class="link-button small">Delete goal</button>
+                    </form>
+                </div>
+            </section>
+        }
+    </div>
+}
+
+<section class="panel" aria-labelledby="new-goal">
+    <h2 id="new-goal">@(Model.Goals.Count == 0 ? "Start your first goal" : "New goal")</h2>
+    <form asp-action="Create" method="post" class="form-inline" novalidate>
+        <div class="field">
+            <label asp-for="NewGoal.Name">Name</label>
+            <input asp-for="NewGoal.Name" class="input" maxlength="80" placeholder="e.g. Emergency fund" />
+            <span asp-validation-for="NewGoal.Name" class="field-validation-error"></span>
+        </div>
+        <div class="field">
+            <label asp-for="NewGoal.TargetAmount">Target (@Prefs.Symbol)</label>
+            <input asp-for="NewGoal.TargetAmount" class="input" type="number" inputmode="decimal" step="0.01" min="1" />
+            <span asp-validation-for="NewGoal.TargetAmount" class="field-validation-error"></span>
+        </div>
+        <button type="submit" class="button">Create goal</button>
+    </form>
+</section>

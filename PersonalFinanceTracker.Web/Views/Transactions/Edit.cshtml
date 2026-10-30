@@ -1,0 +1,17 @@
+@model TransactionInput
+@{
+    var id = (Guid)ViewData["TransactionId"]!;
+}
+
+<div class="page-head">
+    <h1>Edit transaction</h1>
+</div>
+
+@* The ID travels in the URL; the server re-checks it belongs to you before saving. *@
+<form class="panel" asp-action="Edit" asp-route-id="@id" method="post" novalidate data-transaction-form>
+    <partial name="_Form" model="Model" />
+    <div class="actions">
+        <button type="submit" class="button">Save changes</button>
+        <a asp-action="Index">Cancel</a>
+    </div>
+</form>

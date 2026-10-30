@@ -1,0 +1,68 @@
+@model BudgetsViewModel
+@*
+    Monthly limits per spending category. "Spent" is this calendar month's expenses,
+    calculated live, so it resets on the 1st without anything to maintain.
+*@
+@{
+    var monthName = ViewHelpers.MonthName(Model.Month);
+}
+
+<div class="page-head">
+    <div>
+        <h1>Budgets</h1>
+        <p class="muted">Spending against your limits for @monthName.</p>
+    </div>
+</div>
+
+@if (Model.Budgets.Count > 0)
+{
+    <div class="cards">
+        @foreach (var b in Model.Budgets)
+        {
+            // Computed here because a "..." string inside model="..." would end the HTML attribute.
+            var tone = b.IsOver ? "over" : "neutral";
+            <section class="panel" aria-labelledby="budget-@b.Id">
+                <h2 id="budget-@b.Id">@b.Category</h2>
+                <div class="card-figures">
+                    <span class="big figure @(b.IsOver ? "amount--over" : null)">@Prefs.Format(b.Spent)</span>
+                    <span class="muted">of @Prefs.Format(b.Limit)</span>
+                </div>
+                <partial name="_Bar" model="new BarModel(b.Spent, b.Limit, tone)" />
+                <div class="card-foot">
+                    @if (b.IsOver)
+                    {
+                        <span class="amount--over">@Prefs.Format(-b.Remaining) over</span>
+                    }
+                    else
+                    {
+                        <span class="muted">@Prefs.Format(b.Remaining) left</span>
+                    }
+                    <form asp-action="Delete" asp-route-id="@b.Id" method="post" class="inline-form"
+                          data-confirm="Remove the @b.Category budget? Your transactions stay as they are.">
+                        <button type="submit" class="link-button small">Remove</button>
+                    </form>
+                </div>
+            </section>
+        }
+    </div>
+}
+
+<section class="panel" aria-labelledby="new-budget">
+    <h2 id="new-budget">@(Model.Budgets.Count == 0 ? "Set your first budget" : "Set a budget")</h2>
+    <p class="muted">Choose a spending category and a monthly limit. Saving a category that already has a budget updates its limit.</p>
+
+    <form asp-action="Save" method="post" class="form-inline" novalidate>
+        <div class="field">
+            <label asp-for="NewBudget.Category">Category</label>
+            <select asp-for="NewBudget.Category" class="select"
+                    asp-items="@(Categories.Expense.Select(c => new SelectListItem(c.ToString(), c.ToString())))"></select>
+            <span asp-validation-for="NewBudget.Category" class="field-validation-error"></span>
+        </div>
+        <div class="field">
+            <label asp-for="NewBudget.MonthlyLimit">Monthly limit (@Prefs.Symbol)</label>
+            <input asp-for="NewBudget.MonthlyLimit" class="input" type="number" inputmode="decimal" step="0.01" min="1" />
+            <span asp-validation-for="NewBudget.MonthlyLimit" class="field-validation-error"></span>
+        </div>
+        <button type="submit" class="button">Save budget</button>
+    </form>
+</section>

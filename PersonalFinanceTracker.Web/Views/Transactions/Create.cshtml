@@ -1,0 +1,13 @@
+@model TransactionInput
+
+<div class="page-head">
+    <h1>Add transaction</h1>
+</div>
+
+<form class="panel" asp-action="Create" method="post" novalidate data-transaction-form>
+    <partial name="_Form" model="Model" />
+    <div class="actions">
+        <button type="submit" class="button">Add transaction</button>
+        <a asp-action="Index">Cancel</a>
+    </div>
+</form>

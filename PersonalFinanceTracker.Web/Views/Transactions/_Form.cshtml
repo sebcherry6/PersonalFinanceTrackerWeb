@@ -1,0 +1,60 @@
+@model TransactionInput
+@*
+    Shared by Add and Edit. Field names match TransactionInput, which is all the server
+    accepts - there is no UserId or Id field to tamper with.
+    data-transaction-form lets site.js narrow the category list to the chosen type.
+*@
+<div asp-validation-summary="ModelOnly" class="validation-summary-errors" role="alert"></div>
+
+<fieldset class="field">
+    <legend>Type</legend>
+    <div class="segmented">
+        <input type="radio" id="type-out" asp-for="Type" value="Expense" />
+        <label for="type-out">Money out</label>
+        <input type="radio" id="type-in" asp-for="Type" value="Income" />
+        <label for="type-in">Money in</label>
+    </div>
+    <span asp-validation-for="Type" class="field-validation-error"></span>
+</fieldset>
+
+<div class="field">
+    <label asp-for="Description">Description</label>
+    <input asp-for="Description" class="input" maxlength="200" placeholder="e.g. Weekly shop" autocomplete="off" />
+    <span asp-validation-for="Description" class="field-validation-error"></span>
+</div>
+
+<div class="form-row">
+    <div class="field">
+        <label asp-for="Amount">Amount (@Prefs.Symbol)</label>
+        <input asp-for="Amount" class="input" type="number" inputmode="decimal" step="0.01" min="0.01" max="10000000" />
+        <span asp-validation-for="Amount" class="field-validation-error"></span>
+    </div>
+
+    <div class="field">
+        <label asp-for="Date">Date</label>
+        <input asp-for="Date" class="input" type="date" asp-format="{0:yyyy-MM-dd}" />
+        <span asp-validation-for="Date" class="field-validation-error"></span>
+    </div>
+</div>
+
+<div class="field">
+    <label asp-for="Category">Category</label>
+    <select asp-for="Category" class="select">
+        <optgroup label="Spending" data-group="expense">
+            @foreach (var c in Categories.Expense.Where(c => c != Category.Other))
+            {
+                <option value="@c">@c</option>
+            }
+        </optgroup>
+        <optgroup label="Income" data-group="income">
+            @foreach (var c in Categories.Income.Where(c => c != Category.Other))
+            {
+                <option value="@c">@c</option>
+            }
+        </optgroup>
+        <optgroup label="Either" data-group="both">
+            <option value="@Category.Other">Other</option>
+        </optgroup>
+    </select>
+    <span asp-validation-for="Category" class="field-validation-error"></span>
+</div>

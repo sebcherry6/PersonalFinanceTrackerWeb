@@ -1,0 +1,10 @@
+@* Shared using-statements and services for every view. *@
+@using PersonalFinanceTracker.Web
+@using PersonalFinanceTracker.Web.Models
+@using PersonalFinanceTracker.Web.Models.ViewModels
+@using PersonalFinanceTracker.Web.Infrastructure
+@using PersonalFinanceTracker.Web.Services
+@using Microsoft.AspNetCore.Mvc.Rendering
+@* Prefs.Format(amount) formats money in the user's currency; Prefs.Theme sets light/dark. *@
+@inject UserPreferences Prefs
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers

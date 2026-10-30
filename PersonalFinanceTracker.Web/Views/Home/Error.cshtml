@@ -1,0 +1,23 @@
+@model ErrorViewModel
+@{
+    var (title, message) = Model.StatusCode switch
+    {
+        404 => ("Page not found", "That page doesn't exist, or it belongs to a different account."),
+        403 => ("Not allowed", "You don't have access to that page."),
+        429 => ("Too many attempts", "Wait a minute, then try again."),
+        400 => ("Something didn't add up", "The form may have expired. Go back, refresh the page and try again."),
+        _ => ("Something went wrong", "The problem has been logged. Try again in a moment.")
+    };
+    ViewData["Title"] = title;
+}
+
+<div class="error-code" aria-hidden="true">@Model.StatusCode</div>
+<h1>@title</h1>
+<p>@message</p>
+<p class="actions">
+    <a class="button" asp-controller="Dashboard" asp-action="Index">Go to overview</a>
+</p>
+@if (!string.IsNullOrEmpty(Model.RequestId) && Model.StatusCode >= 500)
+{
+    <p class="muted small">Reference: <code>@Model.RequestId</code></p>
+}

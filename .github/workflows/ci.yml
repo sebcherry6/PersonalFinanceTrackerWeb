@@ -1,0 +1,54 @@
+# Build, test and container-build on every push and pull request.
+#
+# Security notes:
+#  * permissions: read-only token - this workflow can't push code or publish anything.
+#  * Actions are referenced by version tag here. For stronger supply-chain protection,
+#    replace each tag with its full commit SHA (e.g. actions/checkout@<40-char sha> # v4)
+#    and let Dependabot (.github/dependabot.yml) keep them current.
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore PersonalFinanceTracker.Web.slnx
+
+      - name: Build
+        run: dotnet build PersonalFinanceTracker.Web.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test PersonalFinanceTracker.Web.slnx --configuration Release --no-build --logger "console;verbosity=normal"
+
+      - name: Check for vulnerable packages
+        run: |
+          dotnet list PersonalFinanceTracker.Web.slnx package --vulnerable --include-transitive | tee vulnerable.txt
+          if grep -q -i "has the following vulnerable packages" vulnerable.txt; then
+            echo "::error::Vulnerable NuGet packages found - update them before merging."
+            exit 1
+          fi
+
+      - name: Check the EF model matches the migrations
+        run: |
+          dotnet tool install --global dotnet-ef
+          dotnet ef migrations has-pending-model-changes --project PersonalFinanceTracker.Web
+
+      - name: Build container image
+        run: docker build --tag financetracker:ci .

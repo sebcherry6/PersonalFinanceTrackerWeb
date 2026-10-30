@@ -1,22 +1,26 @@
-# Build outputs
+# Build output
 bin/
 obj/
 
-# Databases (VERY IMPORTANT for your project)
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+*.user
+*.suo
+
+# Local database and keys - real user data, never commit it.
+# (A fresh, empty App_Data/finance.db is included in the project zip; the app also
+#  creates it automatically on first run.)
 *.db
-*.sqlite
 *.db-shm
 *.db-wal
+keys/
 
-# Visual Studio
-.vs/
+# Secrets
+appsettings.*.local.json
+.env
 
-# User secrets
-appsettings.Development.json
-
-# Logs
+# Logs / OS
 *.log
-
-# OS files
 .DS_Store
 Thumbs.db

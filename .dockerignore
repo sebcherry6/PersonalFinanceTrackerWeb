@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.git/
+**/.github/
+**/App_Data/
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/*.user
+PersonalFinanceTracker.Tests/

@@ -1,0 +1,13 @@
+@model BarModel
+@*
+    A horizontal progress bar drawn in SVG. The fill width is an SVG attribute, not a CSS
+    style, so it's allowed by the Content-Security-Policy (which forbids inline styles).
+    Decorative only: the numbers are always shown as text next to it.
+*@
+@{
+    var percent = ViewHelpers.Svg(ViewHelpers.Percent(Model.Value, Model.Max));
+}
+<svg class="bar bar--@Model.Tone" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <rect class="bar__track" width="100" height="8" />
+    <rect class="bar__fill" width="@percent" height="8" />
+</svg>

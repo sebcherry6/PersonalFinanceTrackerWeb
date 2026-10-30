@@ -1,0 +1,20 @@
+@model Transaction
+
+<div class="page-head">
+    <h1>Delete this transaction?</h1>
+</div>
+
+<div class="panel">
+    <dl class="stats">
+        <div><dt>Description</dt><dd>@Model.Description</dd></div>
+        <div><dt>Amount</dt><dd class="figure @(Model.Type == TransactionType.Income ? "amount--in" : null)">@Prefs.FormatSigned(Model.Amount, Model.Type)</dd></div>
+        <div><dt>Category</dt><dd>@Model.Category</dd></div>
+        <div><dt>Date</dt><dd>@ViewHelpers.ShortDate(Model.Date)</dd></div>
+    </dl>
+    <p>This can't be undone.</p>
+
+    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="actions">
+        <button type="submit" class="button button--danger">Delete transaction</button>
+        <a asp-action="Index">Keep it</a>
+    </form>
+</div>

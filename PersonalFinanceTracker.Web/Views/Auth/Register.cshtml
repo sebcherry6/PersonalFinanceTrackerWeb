@@ -1,0 +1,38 @@
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Create account";
+}
+<a class="brand" asp-controller="Auth" asp-action="Login">
+    <img src="~/img/cherry-logo.svg" alt="" width="40" height="40" />
+    <span class="brand__name">FinanceTracker <span class="brand__by">by WebCherry</span></span>
+</a>
+
+<h1>Create your account</h1>
+<p class="muted">Your data is private to your account. You can export or delete it at any time.</p>
+
+<form asp-action="Register" method="post" novalidate>
+    <div asp-validation-summary="ModelOnly" class="validation-summary-errors" role="alert"></div>
+
+    <div class="field">
+        <label asp-for="Email">Email</label>
+        <input asp-for="Email" class="input" autocomplete="email" autofocus />
+        <span asp-validation-for="Email" class="field-validation-error"></span>
+    </div>
+
+    <div class="field">
+        <label asp-for="Password">Password</label>
+        <span class="hint" id="password-hint">At least 12 characters. A short phrase is easier to remember and harder to guess.</span>
+        <input asp-for="Password" class="input" autocomplete="new-password" aria-describedby="password-hint" />
+        <span asp-validation-for="Password" class="field-validation-error"></span>
+    </div>
+
+    <div class="field">
+        <label asp-for="ConfirmPassword">Confirm password</label>
+        <input asp-for="ConfirmPassword" class="input" autocomplete="new-password" />
+        <span asp-validation-for="ConfirmPassword" class="field-validation-error"></span>
+    </div>
+
+    <button type="submit" class="button button--block">Create account</button>
+</form>
+
+<p class="switch">Already have an account? <a asp-action="Login">Sign in</a></p>

@@ -1,0 +1,80 @@
+@*
+    Page frame for every screen.
+    Signed in:  sidebar navigation + content column.
+    Signed out: a single centred column (sign-in / create account).
+
+    No inline <script> or style="" anywhere: the Content-Security-Policy would block them.
+    Razor HTML-encodes everything written with @, which is the main defence against XSS.
+*@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@{
+    var signedIn = SignInManager.IsSignedIn(User);
+    var nav = ViewData["Nav"] as string;
+    // null removes the attribute entirely, which means "follow the OS setting".
+    string? theme = Prefs.Theme == "system" ? null : Prefs.Theme;
+    string? Current(string key) => nav == key ? "page" : null;
+}
+<!DOCTYPE html>
+<html lang="en-GB" data-theme="@theme">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="referrer" content="same-origin" />
+    <title>@(ViewData["Title"] is string t ? $"{t} – FinanceTracker" : "FinanceTracker by WebCherry")</title>
+    <link rel="icon" href="~/img/cherry-logo.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <script src="~/js/site.js" asp-append-version="true" defer></script>
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    @if (signedIn)
+    {
+        <div class="shell">
+            <aside class="sidebar">
+                <a class="brand" asp-controller="Dashboard" asp-action="Index">
+                    <img src="~/img/cherry-logo.svg" alt="" width="34" height="34" />
+                    <span class="brand__name">FinanceTracker <span class="brand__by">by WebCherry</span></span>
+                </a>
+
+                <a class="button button--block" asp-controller="Transactions" asp-action="Create" aria-current="@Current("add")">Add transaction</a>
+
+                <nav class="nav" aria-label="Main">
+                    <a asp-controller="Dashboard" asp-action="Index" aria-current="@Current("overview")">Overview</a>
+                    <a asp-controller="Transactions" asp-action="Index" aria-current="@Current("transactions")">Transactions</a>
+                    <a asp-controller="Budgets" asp-action="Index" aria-current="@Current("budgets")">Budgets</a>
+                    <a asp-controller="Goals" asp-action="Index" aria-current="@Current("goals")">Goals</a>
+                    <a asp-controller="Dashboard" asp-action="Analytics" aria-current="@Current("insights")">Insights</a>
+                    <a asp-controller="Settings" asp-action="Index" aria-current="@Current("settings")">Settings</a>
+                </nav>
+
+                <div class="sidebar__foot">
+                    <div class="sidebar__email">@User.Identity?.Name</div>
+                    @* Sign-out is a POST with an anti-forgery token, added automatically by the form tag helper. *@
+                    <form asp-controller="Auth" asp-action="Logout" method="post">
+                        <button type="submit" class="link-button">Sign out</button>
+                    </form>
+                </div>
+            </aside>
+
+            <main id="main" class="content">
+                <partial name="_StatusMessage" />
+                @RenderBody()
+            </main>
+        </div>
+    }
+    else
+    {
+        <main id="main" class="auth-main">
+            <div class="auth-card">
+                <partial name="_StatusMessage" />
+                @RenderBody()
+            </div>
+        </main>
+    }
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

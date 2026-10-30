@@ -1,0 +1,133 @@
+@model AnalyticsViewModel
+@using System.Globalization
+@*
+    Insights for the last six months. The chart is plain SVG built here in Razor - no chart
+    library, no external script - so it works under the strict Content-Security-Policy.
+    A data table under the chart gives the same numbers to screen readers and keyboard users.
+*@
+@{
+    // Chart geometry (SVG user units; the SVG scales to its container).
+    const int width = 600, plotTop = 12, baseline = 190, height = baseline + 2, groupWidth = 100, barWidth = 26, gap = 6;
+    var plotHeight = baseline - plotTop;
+    var max = Model.Months.Count == 0 ? 0 : Model.Months.Max(m => Math.Max(m.In, m.Out));
+    decimal Height(decimal v) => max <= 0 ? 0 : v / max * plotHeight;
+    var range = $"{ViewHelpers.MonthName(Model.From)} to {ViewHelpers.MonthName(Model.To)}";
+    var chartLabel = string.Join("; ", Model.Months.Select(m =>
+        $"{m.Month.ToString("MMMM", CultureInfo.InvariantCulture)}: in {Prefs.Format(m.In)}, out {Prefs.Format(m.Out)}"));
+}
+
+<div class="page-head">
+    <div>
+        <h1>Insights</h1>
+        <p class="muted">@range</p>
+    </div>
+</div>
+
+@if (!Model.HasData)
+{
+    <div class="panel empty">
+        <h2>Not enough to show yet</h2>
+        <p class="muted">Insights fill in as you record transactions. Add a few and come back.</p>
+        <a class="button" asp-controller="Transactions" asp-action="Create">Add transaction</a>
+    </div>
+}
+else
+{
+    <dl class="stats">
+        <div><dt>Money in</dt><dd class="figure amount--in">@Prefs.Format(Model.TotalIn)</dd></div>
+        <div><dt>Money out</dt><dd class="figure">@Prefs.Format(Model.TotalOut)</dd></div>
+        <div>
+            <dt>Kept</dt>
+            <dd class="figure">@(Model.SavingsRate is { } rate ? rate.ToString("0%", CultureInfo.InvariantCulture) : "–")</dd>
+        </div>
+        <div><dt>Average monthly spend</dt><dd class="figure">@Prefs.Format(Model.AverageMonthlySpend)</dd></div>
+    </dl>
+
+    <section class="panel" aria-labelledby="monthly-heading">
+        <div class="panel__head">
+            <h2 id="monthly-heading">Month by month</h2>
+        </div>
+        <div class="legend" aria-hidden="true"><span class="in">Money in</span><span class="out">Money out</span></div>
+
+        <svg class="chart" viewBox="0 0 @width @height" role="img" aria-label="Money in and out by month. @chartLabel">
+            <line class="baseline" x1="0" x2="@width" y1="@baseline" y2="@baseline" />
+            @for (var i = 0; i < Model.Months.Count; i++)
+            {
+                var m = Model.Months[i];
+                var groupX = i * groupWidth + (groupWidth - (barWidth * 2 + gap)) / 2;
+                var inH = Height(m.In);
+                var outH = Height(m.Out);
+                <rect class="col-in" x="@groupX" y="@ViewHelpers.Svg(baseline - inH)" width="@barWidth" height="@ViewHelpers.Svg(inH)" />
+                <rect class="col-out" x="@(groupX + barWidth + gap)" y="@ViewHelpers.Svg(baseline - outH)" width="@barWidth" height="@ViewHelpers.Svg(outH)" />
+            }
+        </svg>
+        @* Month labels are HTML rather than SVG <text>: Razor treats <text> as a special tag. *@
+        <div class="chart-labels" aria-hidden="true">
+            @foreach (var m in Model.Months)
+            {
+                <span>@m.Month.ToString("MMM", CultureInfo.InvariantCulture)</span>
+            }
+        </div>
+
+        <details class="data-table">
+            <summary>Show as a table</summary>
+            <div class="table-wrap">
+                <table class="ledger">
+                    <thead><tr><th>Month</th><th class="num">In</th><th class="num">Out</th><th class="num">Difference</th></tr></thead>
+                    <tbody>
+                        @foreach (var m in Model.Months)
+                        {
+                            <tr>
+                                <td>@ViewHelpers.MonthName(m.Month)</td>
+                                <td class="num amount--in">@Prefs.Format(m.In)</td>
+                                <td class="num">@Prefs.Format(m.Out)</td>
+                                <td class="num @(m.Net < 0 ? "amount--over" : null)">@Prefs.Format(m.Net)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </details>
+    </section>
+
+    <div class="grid-2">
+        <section class="panel" aria-labelledby="categories-heading">
+            <div class="panel__head"><h2 id="categories-heading">Where it went</h2></div>
+            @if (Model.Spending.Count == 0)
+            {
+                <p class="muted">No spending in this period.</p>
+            }
+            else
+            {
+                var top = Model.Spending[0].Total;
+                <ul class="breakdown">
+                    @foreach (var c in Model.Spending)
+                    {
+                        var share = Model.TotalOut > 0 ? c.Total / Model.TotalOut : 0;
+                        <li>
+                            <div class="breakdown__row">
+                                <span>@c.Category <span class="muted small">@share.ToString("0%", CultureInfo.InvariantCulture)</span></span>
+                                <span class="amount">@Prefs.Format(c.Total)</span>
+                            </div>
+                            <partial name="_Bar" model="new BarModel(c.Total, top)" />
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+
+        <section class="panel" aria-labelledby="largest-heading">
+            <div class="panel__head"><h2 id="largest-heading">Largest single expense</h2></div>
+            @if (Model.LargestExpense is { } big)
+            {
+                <p class="card-figures"><span class="big figure">@Prefs.Format(big.Amount)</span></p>
+                <p>@big.Description</p>
+                <p class="muted small">@big.Category, @ViewHelpers.ShortDate(big.Date)</p>
+            }
+            else
+            {
+                <p class="muted">No expenses in this period.</p>
+            }
+        </section>
+    </div>
+}

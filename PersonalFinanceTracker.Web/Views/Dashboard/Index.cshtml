@@ -1,0 +1,93 @@
+@model DashboardViewModel
+@*
+    Overview. The balance is the hero; one sentence explains the month in plain words.
+    Everything here comes from FinanceService.GetDashboardAsync for the signed-in user only.
+*@
+@{
+    var monthName = ViewHelpers.MonthName(Model.Month).Split(' ')[0];
+    var maxSpend = Model.MonthSpending.Count > 0 ? Model.MonthSpending.Max(c => c.Total) : 0;
+}
+
+<section class="hero" aria-labelledby="balance-label">
+    <p class="hero__label" id="balance-label">Balance across all transactions</p>
+    <p class="hero__figure figure @(Model.Balance < 0 ? "is-negative" : null)">@Prefs.Format(Model.Balance)</p>
+
+    @if (!Model.HasAnyTransactions)
+    {
+        <p class="hero__sentence">Nothing recorded yet. Add your first income or expense and your balance will appear here.</p>
+        <a class="button" asp-controller="Transactions" asp-action="Create">Add transaction</a>
+    }
+    else if (Model.MonthIn == 0 && Model.MonthOut == 0)
+    {
+        <p class="hero__sentence">No money in or out so far in @monthName.</p>
+    }
+    else
+    {
+        <p class="hero__sentence">
+            In @monthName you've brought in <strong class="amount--in">@Prefs.Format(Model.MonthIn)</strong>
+            and spent <strong>@Prefs.Format(Model.MonthOut)</strong>,
+            @if (Model.MonthNet >= 0)
+            {
+                <text>so you've kept <strong>@Prefs.Format(Model.MonthNet)</strong>.</text>
+            }
+            else
+            {
+                <text>so you're <strong class="amount--over">@Prefs.Format(-Model.MonthNet)</strong> over what came in.</text>
+            }
+        </p>
+    }
+</section>
+
+@if (Model.HasAnyTransactions)
+{
+    <div class="grid-2">
+        <section class="panel" aria-labelledby="spending-heading">
+            <div class="panel__head">
+                <h2 id="spending-heading">Spending in @monthName</h2>
+                <a class="small" asp-controller="Budgets" asp-action="Index">Budgets</a>
+            </div>
+
+            @if (Model.MonthSpending.Count == 0)
+            {
+                <p class="muted">No spending recorded this month.</p>
+            }
+            else
+            {
+                <ul class="breakdown">
+                    @foreach (var item in Model.MonthSpending)
+                    {
+                        <li>
+                            <div class="breakdown__row">
+                                <span>@item.Category</span>
+                                <span class="amount">@Prefs.Format(item.Total)</span>
+                            </div>
+                            <partial name="_Bar" model="new BarModel(item.Total, maxSpend)" />
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+
+        <section class="panel" aria-labelledby="recent-heading">
+            <div class="panel__head">
+                <h2 id="recent-heading">Latest</h2>
+                <a class="small" asp-controller="Transactions" asp-action="Index">All transactions</a>
+            </div>
+
+            <ul class="recent">
+                @foreach (var t in Model.Recent)
+                {
+                    <li>
+                        <span>
+                            @t.Description
+                            <span class="recent__meta">@t.Category, @ViewHelpers.ShortDate(t.Date)</span>
+                        </span>
+                        <span class="amount @(t.Type == TransactionType.Income ? "amount--in" : "amount--out")">
+                            @Prefs.FormatSigned(t.Amount, t.Type)
+                        </span>
+                    </li>
+                }
+            </ul>
+        </section>
+    </div>
+}
