@@ -66,6 +66,4 @@ What was found in the original project and what was done about it, most serious 
 
 Old `Areas/Identity` scaffold folders (never compiled, outside the project), `ApplicationUser` (unused), `TransactionFactory` (unused, set no `UserId`), the `Summary` view, the template Home views, `_LoginPartial`, `_EmptyState` (referenced a missing image), the six partial CSS files, `theme.js`, `.csproj.user`, `.csproj.Backup.tmp`, and the 43 MB `.csproj.Backup.zip`. `wwwroot/lib` (Bootstrap, jQuery) is no longer referenced and can be deleted.
 
-## Not verified here
-
-This was rewritten without a .NET SDK available, so it has not been compiled or run. Run `dotnet build` and `dotnet test` first. The EF migration snapshot was written by hand to match the model. CI runs `dotnet ef migrations has-pending-model-changes` to confirm it; if that reports a difference, run `dotnet ef migrations add SyncModel --output-dir Data/Migrations` once.
+## COMPILED AND RUN!
