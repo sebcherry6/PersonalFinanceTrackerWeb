@@ -37,6 +37,38 @@
     </form>
 </section>
 
+<section class="panel" aria-labelledby="security-heading">
+    <h2 id="security-heading">Password and sessions</h2>
+
+    <form asp-action="ChangePassword" method="post" novalidate>
+        <div class="field">
+            <label asp-for="ChangePassword.CurrentPassword">Current password</label>
+            <input asp-for="ChangePassword.CurrentPassword" class="input" autocomplete="current-password" />
+        </div>
+        <div class="form-row">
+            <div class="field">
+                <label asp-for="ChangePassword.NewPassword">New password</label>
+                <span class="hint">At least 12 characters. A few random words work well.</span>
+                <input asp-for="ChangePassword.NewPassword" class="input" autocomplete="new-password" />
+            </div>
+            <div class="field">
+                <label asp-for="ChangePassword.ConfirmPassword">Confirm new password</label>
+                <span class="hint">&nbsp;</span>
+                <input asp-for="ChangePassword.ConfirmPassword" class="input" autocomplete="new-password" />
+            </div>
+        </div>
+        <button type="submit" class="button">Change password</button>
+    </form>
+
+    <hr class="rule" />
+
+    <p>Lost a phone or used a shared computer? This signs you out everywhere except here, and stops any API tokens you've issued.</p>
+    <form asp-action="SignOutEverywhere" method="post"
+          data-confirm="Sign out on all other devices?">
+        <button type="submit" class="button button--quiet">Sign out everywhere else</button>
+    </form>
+</section>
+
 <section class="panel" aria-labelledby="data-heading">
     <h2 id="data-heading">Your data</h2>
     <p>Download every transaction as a spreadsheet-friendly CSV file.</p>

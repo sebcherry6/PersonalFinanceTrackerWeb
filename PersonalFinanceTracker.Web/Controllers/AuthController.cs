@@ -38,13 +38,8 @@ public sealed class AuthController(
             return RedirectToLocal(model.ReturnUrl);
         }
 
-        if (result.IsLockedOut)
-        {
-            // Logged server-side for you; the user sees the same message as a wrong password
-            // so the page doesn't reveal which emails have accounts.
-            logger.LogWarning("Sign-in blocked by lockout for a user account.");
-        }
-
+        // Lockouts and failures are written to the audit log by AccountSecurity. The user sees
+        // the same message either way so the page doesn't reveal which emails have accounts.
         ModelState.AddModelError(string.Empty,
             "That email and password don't match. After 5 failed attempts, sign-in is paused for 15 minutes.");
         return View(Cleared(model));
@@ -71,6 +66,7 @@ public sealed class AuthController(
 
         if (result.Succeeded)
         {
+            AuditLog.AccountCreated(logger, user.Id);
             await signIn.SignInAsync(user, isPersistent: false);
             TempData["Status"] = "Your account is ready. Add your first transaction to get started.";
             return RedirectToAction("Index", "Dashboard");

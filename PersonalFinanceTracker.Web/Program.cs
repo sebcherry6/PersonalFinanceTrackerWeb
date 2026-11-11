@@ -8,6 +8,8 @@
 //  Security choices are commented where they're made, so you can see why each exists.
 // =============================================================================
 
+using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
@@ -102,8 +104,16 @@ builder.Services.ConfigureApplicationCookie(options =>
 // --- Bearer tokens for the JSON API -------------------------------------------------
 // The API uses tokens (see Security/ApiAuth.cs for why). POST /api/auth/token returns one;
 // it's valid for 1 hour and is sent as "Authorization: Bearer <token>".
+// Tokens also carry the account's security stamp, and Security/ApiTokenStampFilter.cs rejects
+// them as soon as the password changes or the user signs out everywhere.
+// The handler also hands out a refresh token, but there's no refresh endpoint yet, so I keep
+// it as short-lived as the access token instead of the 14-day default.
 builder.Services.AddAuthentication()
-    .AddBearerToken(ApiAuth.Scheme, options => options.BearerTokenExpiration = TimeSpan.FromHours(1));
+    .AddBearerToken(ApiAuth.Scheme, options =>
+    {
+        options.BearerTokenExpiration = TimeSpan.FromHours(1);
+        options.RefreshTokenExpiration = TimeSpan.FromHours(1);
+    });
 
 // --- Authorization: secure by default ----------------------------------------------
 // Every endpoint requires a signed-in user unless it explicitly says [AllowAnonymous]
@@ -138,6 +148,18 @@ if (!string.IsNullOrWhiteSpace(keysPath))
     dataProtection.PersistKeysToFileSystem(new DirectoryInfo(keysPath));
 }
 
+// On a real host, encrypt those key files too. Otherwise anyone who gets a copy of the /data
+// volume (a backup, a snapshot) can forge sign-in cookies. Point these at a .pfx certificate;
+// keep the password in an environment variable or the host's secret store, never in Git:
+//   DataProtection__CertificatePath=/run/secrets/dp-cert.pfx
+//   DataProtection__CertificatePassword=...
+var certPath = builder.Configuration["DataProtection:CertificatePath"];
+if (!string.IsNullOrWhiteSpace(certPath))
+{
+    var certificate = X509CertificateLoader.LoadPkcs12FromFile(certPath, builder.Configuration["DataProtection:CertificatePassword"]);
+    dataProtection.ProtectKeysWithCertificate(certificate);
+}
+
 // --- MVC + global filters ------------------------------------------------------------
 builder.Services
     .AddControllersWithViews(options =>
@@ -166,14 +188,30 @@ builder.Services.AddAppRateLimiting(builder.Configuration);
 // Container Apps, Fly.io, nginx...), set ReverseProxy:Enabled=true so the app sees the real
 // client IP and scheme. Only do this if the app is NOT directly reachable from the internet,
 // otherwise clients could fake X-Forwarded-For.
+//
+// Best practice: list the proxy's address range so X-Forwarded-For is only believed when it
+// comes from the proxy. Otherwise a client that reaches the app directly could fake its IP
+// and dodge the per-IP sign-in rate limit.
+//   ReverseProxy__KnownNetworks__0=10.0.0.0/8        (e.g. your container environment's subnet)
+//   ReverseProxy__KnownProxies__0=172.17.0.1
+// If none are set I fall back to trusting any proxy (only the last hop, ForwardLimit = 1) and
+// log a warning at startup, because some hosts don't publish a fixed proxy range.
 var behindProxy = builder.Configuration.GetValue<bool>("ReverseProxy:Enabled");
+var knownNetworks = builder.Configuration.GetSection("ReverseProxy:KnownNetworks").Get<string[]>() ?? [];
+var knownProxies = builder.Configuration.GetSection("ReverseProxy:KnownProxies").Get<string[]>() ?? [];
 if (behindProxy)
 {
     builder.Services.Configure<ForwardedHeadersOptions>(options =>
     {
         options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.ForwardLimit = 1;
         options.KnownIPNetworks.Clear();
         options.KnownProxies.Clear();
+
+        foreach (var network in knownNetworks) options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(network));
+        foreach (var proxy in knownProxies) options.KnownProxies.Add(IPAddress.Parse(proxy));
+        // With both lists empty the middleware accepts the header from whoever is directly in
+        // front of the app, which is the fallback described above.
     });
 }
 
@@ -190,6 +228,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<FinanceService>();
 builder.Services.AddScoped<UserPreferences>();
 builder.Services.AddScoped<AccountSecurity>();
+builder.Services.AddHttpContextAccessor();   // AccountSecurity logs the caller's IP on failed sign-ins
 
 var app = builder.Build();
 
@@ -219,6 +258,11 @@ using (var scope = app.Services.CreateScope())
 if (behindProxy)
 {
     app.UseForwardedHeaders();               // must run first so everything sees the real IP/scheme
+
+    if (knownNetworks.Length == 0 && knownProxies.Length == 0)
+    {
+        AuditLog.ProxyNotRestricted(app.Logger);
+    }
 }
 
 if (!app.Environment.IsDevelopment())

@@ -1,5 +1,24 @@
 # Audit and changes
 
+## Second review (November 2026)
+
+| # | Problem | Risk | Fix |
+| --- | --- | --- | --- |
+| 1 | API tokens stayed valid for their whole hour after a password change or account deletion. | A stolen token kept working after the owner reacted. | `Security/ApiTokenStampFilter.cs` checks the token's security stamp on every API call; tests in `TokenRevocationTests.cs`. |
+| 2 | The bearer handler issued 14-day refresh tokens with no refresh endpoint. | Long-lived credentials with no use. | Refresh token lifetime set to 1 hour, same as the access token. |
+| 3 | No way to change the password or end other sessions. | A leaked password or lost device couldn't be dealt with. | Settings: "Change password" and "Sign out everywhere else" (both rotate the security stamp). |
+| 4 | Behind a proxy, `X-Forwarded-For` was trusted from any source. | Clients reaching the app directly could fake their IP and dodge the sign-in rate limit. | `ReverseProxy:KnownNetworks` / `KnownProxies` allow-list, `ForwardLimit = 1`, startup warning when unset. |
+| 5 | Data-protection keys were stored unencrypted on the `/data` volume. | A copy of the volume or a backup could forge sign-in cookies. | Optional certificate encryption via `DataProtection:CertificatePath`. |
+| 6 | No record of security events. | Attacks and account changes left no trace. | `Security/AuditLog.cs`: event IDs 1000-1099, user IDs only. |
+| 7 | No static analysis in CI. | Code-level issues only found by hand. | `.github/workflows/codeql.yml`. |
+| 8 | README said a database was "attached" while `.gitignore` excludes `*.db`. | Confusing; invites force-adding a database with real data. | README corrected; the app creates the file on first run. |
+
+Design: moved to the shared WebCherry brand (Code Cherry logo, `#101115` dark base, cherry accents, Space Grotesk / Inter / JetBrains Mono, self-hosted). Dark is now the default theme; the light theme follows the same palette. Button red is `#D42A4C` so white text passes 4.5:1; the danger button is outlined so it can't be confused with the main action.
+
+Not verified here: written without a .NET SDK, so run `dotnet build` and `dotnet test` before merging.
+
+## First review
+
 What was found in the original project and what was done about it, most serious first.
 
 ## Security

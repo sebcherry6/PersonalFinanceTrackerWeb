@@ -140,10 +140,33 @@ public sealed class DeleteAccountInput
     public string Password { get; set; } = string.Empty;
 }
 
+public sealed class ChangePasswordInput
+{
+    [Required(ErrorMessage = "Enter your current password.")]
+    [DataType(DataType.Password)]
+    [StringLength(128)]
+    [Display(Name = "Current password")]
+    public string CurrentPassword { get; set; } = string.Empty;
+
+    // Same rules as registration (12+ characters, see RegisterViewModel and Program.cs).
+    [Required(ErrorMessage = "Choose a new password.")]
+    [StringLength(128, MinimumLength = 12, ErrorMessage = "Use at least 12 characters.")]
+    [DataType(DataType.Password)]
+    [Display(Name = "New password")]
+    public string NewPassword { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Type the new password again.")]
+    [DataType(DataType.Password)]
+    [Compare(nameof(NewPassword), ErrorMessage = "The new passwords don't match.")]
+    [Display(Name = "Confirm new password")]
+    public string ConfirmPassword { get; set; } = string.Empty;
+}
+
 public sealed class SettingsViewModel
 {
     public required SettingsInput Preferences { get; init; }
     public required string Email { get; init; }
+    public ChangePasswordInput ChangePassword { get; init; } = new();
     public DeleteAccountInput DeleteAccount { get; init; } = new();
 }
 

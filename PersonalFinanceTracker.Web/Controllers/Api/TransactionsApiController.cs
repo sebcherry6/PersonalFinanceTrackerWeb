@@ -24,6 +24,7 @@ namespace PersonalFinanceTracker.Web.Controllers.Api;
 [ApiController]
 [Route("api")]
 [Authorize(AuthenticationSchemes = ApiAuth.Scheme)]
+[ValidateApiTokenStamp]    // old tokens stop working after a password change or sign-out
 [IgnoreAntiforgeryToken]
 [EnableRateLimiting(RateLimitPolicies.Api)]
 public sealed class TransactionsApiController(FinanceService finance) : ControllerBase

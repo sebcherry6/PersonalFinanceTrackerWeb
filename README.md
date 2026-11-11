@@ -7,7 +7,7 @@ A personal finance tracker: record money in and out, set monthly budgets per cat
 | Part | Where |
 | --- | --- |
 | Web app (MVC + Razor views) | `PersonalFinanceTracker.Web/` |
-| Database (SQLite, attached and ready) | `PersonalFinanceTracker.Web/App_Data/finance.db` |
+| Database (SQLite, created on first run, never committed) | `PersonalFinanceTracker.Web/App_Data/finance.db` |
 | Schema migration | `PersonalFinanceTracker.Web/Data/Migrations/` |
 | JSON API | `PersonalFinanceTracker.Web/Controllers/Api/` |
 | Tests (xUnit, unit + full-app security tests) | `PersonalFinanceTracker.Tests/` |
@@ -23,7 +23,15 @@ dotnet restore
 dotnet run --project PersonalFinanceTracker.Web
 ```
 
-Open the HTTPS address it prints and create an account. The attached database is empty (schema only, no users). If you delete it, the app recreates it on the next start.
+Open the HTTPS address it prints and create an account. The database file is created on the first start; delete it any time to start fresh.
+
+**Brand fonts (once):** the app uses the WebCherry fonts (Space Grotesk, Inter, JetBrains Mono) and serves them itself, because the Content-Security-Policy blocks font CDNs. Download them with:
+
+```
+pwsh tools/get-fonts.ps1
+```
+
+Without them the app still works and falls back to your system fonts.
 
 First time on this machine? Trust the development HTTPS certificate once with `dotnet dev-certs https --trust`. The sign-in cookie is HTTPS-only.
 
@@ -69,11 +77,21 @@ docker build -t webcherry/financetracker .
 docker run -p 8080:8080 -v financetracker-data:/data webcherry/financetracker
 ```
 
-Three things matter on a real host:
+Things that matter on a real host:
 
 1. **Persistent storage at `/data`.** The database and the data-protection keys live there. Without a volume, every redeploy wipes all accounts and signs everyone out.
 2. **HTTPS in front of the container.** Every cloud host above provides it. Then set the environment variable `ReverseProxy__Enabled=true` so the app sees real client IPs (for rate limiting) and the HTTPS scheme (for HSTS).
 3. **Health probe** on `GET /healthz`.
+4. **Tell the app which proxy to trust.** Set `ReverseProxy__KnownNetworks__0` to your host's internal range (e.g. `10.0.0.0/8`) or `ReverseProxy__KnownProxies__0` to the proxy's IP. Without it the app trusts whichever proxy is in front of it and logs a warning at startup.
+5. **Encrypt the sign-in keys.** Give the app a certificate with `DataProtection__CertificatePath` and `DataProtection__CertificatePassword` (keep the password in the host's secret store). Otherwise anyone with a copy of the `/data` volume could forge sign-in cookies.
+6. **Lock the host name.** Set `AllowedHosts` to your domain, e.g. `AllowedHosts=finance.webcherry.dev`.
+7. **Run the container locked down** if your host lets you pass flags:
+
+```
+docker run -p 8080:8080 -v financetracker-data:/data \
+  --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges \
+  webcherry/financetracker
+```
 
 SQLite suits a single instance. To run several instances, switch to Azure SQL or PostgreSQL: change `UseSqlite` in `Program.cs` to the matching provider, regenerate the migration, and run migrations as a deploy step rather than on startup.
 
@@ -87,9 +105,17 @@ Every protection is commented where it's implemented. The main ones:
 - **Secure by default.** A fallback policy requires sign-in on every endpoint unless it's explicitly marked public.
 - **CSRF.** Anti-forgery tokens are required on every form post. The API accepts bearer tokens only, never cookies.
 - **Browser hardening.** A strict Content-Security-Policy with no inline scripts or styles and no third-party CDNs, plus HSTS, `nosniff`, frame blocking, and `no-store` caching on pages with financial data.
+- **Tokens die when they should.** API tokens carry the account's security stamp and are refused as soon as the password changes, you sign out everywhere, or the account is deleted (not an hour later).
+- **Password and sessions.** Change your password and "Sign out everywhere else" from Settings.
+- **Audit log.** Sign-ins, failures, lockouts, password changes, sign-outs, deletions and rejected tokens are logged with event IDs 1000-1099 (user ID only, never passwords, emails on failures, or amounts). Filter on those IDs in your host's log viewer.
+- **Code scanning.** CodeQL runs on every push and weekly; results appear under the repo's Security tab.
 - **Data rights.** Users can download their data as CSV (protected against spreadsheet formula injection) and delete their account, which removes all of their data through database cascades.
 
-Not done yet, and worth adding before real users: email confirmation and password reset (needs an email provider), two-factor authentication, and an optional breached-password check.
+Not done yet, and worth adding before real users: two-factor sign-in with an authenticator app (needs no email provider, so it's next), email confirmation and password reset (needs an email provider), and a breached-password check.
+
+## Testing it by hand
+
+There's a security test log with 42 step-by-step checks (curl/PowerShell commands, DevTools steps, expected results and a Pass/Fail column). Work through it after any change to sign-in, the API or the Docker setup.
 
 ## Project layout
 
@@ -101,8 +127,9 @@ PersonalFinanceTracker.Web/
   Data/                     EF Core context and migrations
   Models/                   entities and validated input models
   Services/                 FinanceService (all data access), preferences, sign-in, CSV export
-  Security/                 headers, rate limiting, auth helpers
+  Security/                 headers, rate limiting, auth helpers, API token checks, audit log
   Views/                    Razor pages
-  wwwroot/                  site.css, site.js, logo
+  wwwroot/                  site.css (WebCherry brand), site.js, Code Cherry logo, fonts/
+tools/get-fonts.ps1         downloads the brand fonts into wwwroot/fonts
 ```
 

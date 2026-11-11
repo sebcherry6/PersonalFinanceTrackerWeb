@@ -1,5 +1,5 @@
 /* =============================================================================
-   FinanceTracker by WebCherry - stylesheet
+   FinanceTracker by WebCherry - stylesheet (WebCherry brand: see section 7)
 
    One file, no framework. Structure:
      1. Tokens (colours, type, spacing) for light and dark themes
@@ -18,63 +18,85 @@
 
 /* 1. Tokens ----------------------------------------------------------------- */
 
+/* WebCherry brand fonts, served from wwwroot/fonts (run tools/get-fonts.ps1 once).
+   If the files aren't there yet, the font stacks below fall back to system fonts. */
+@font-face { font-family: "Space Grotesk"; font-weight: 500; font-display: swap; src: url("../fonts/space-grotesk-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Space Grotesk"; font-weight: 700; font-display: swap; src: url("../fonts/space-grotesk-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 400; font-display: swap; src: url("../fonts/inter-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 500; font-display: swap; src: url("../fonts/inter-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 600; font-display: swap; src: url("../fonts/inter-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 400; font-display: swap; src: url("../fonts/jetbrains-mono-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 500; font-display: swap; src: url("../fonts/jetbrains-mono-latin-500-normal.woff2") format("woff2"); }
+
+/* Light variant of the WebCherry palette ("Light" or "Match device" on a light OS).
+   The brand is dark-first; new accounts start on Dark. */
 :root {
     color-scheme: light;
 
-    --paper: #FBF8F9;          /* page background, faint rose tint */
+    --paper: #F6F6F9;
     --panel: #FFFFFF;
-    --ink: #24171D;            /* text: a cherry-black, not pure black */
-    --muted: #6F5E66;
-    --line: #EADFE4;
-    --line-strong: #D6C5CD;
-    --cherry: #B3123B;         /* brand; also over-budget and destructive actions */
-    --cherry-wash: #FBE8ED;
-    --stem: #2B7A4B;           /* money in */
-    --stem-wash: #E4F2E9;
-    --track: #F1E8EC;          /* empty part of progress bars */
-    --focus: #B3123B;
+    --ink: #101115;
+    --muted: #5C5E6B;
+    --line: #E4E5EB;
+    --line-strong: #CFD1DA;
+    --cherry: #C8264A;         /* brand red, darkened so it passes 4.5:1 as text on white */
+    --cherry-wash: #FCE8EC;
+    --stem: #13804F;           /* money in */
+    --stem-wash: #E3F4EA;
+    --track: #ECEDF2;          /* empty part of progress bars */
+    --focus: #C8264A;
 
-    --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --font-ledger: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    /* Buttons: white text on #D42A4C is ~5:1. The pure brand #E33255 is just under 4.5:1
+       with white text, so I keep it for glows, borders and large type only. */
+    --button-bg: #D42A4C;
+    --button-hover: #BD2242;
+    --glow: rgba(227, 50, 85, 0.28);
 
-    --radius-control: 6px;
-    --radius-panel: 12px;
-    --sidebar: 236px;
+    --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-ledger: "Space Grotesk", "Inter", system-ui, sans-serif;   /* headings and big figures */
+    --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+
+    --radius-control: 8px;
+    --radius-panel: 14px;
+    --sidebar: 244px;
 }
 
-/* Dark values, used when the user chose Dark, or chose "Match system" on a dark OS. */
+/* WebCherry dark: the main brand look. Used when the user picked Dark (the default),
+   or "Match device" on a dark OS. */
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
         color-scheme: dark;
-        --paper: #161013;
-        --panel: #1F181C;
-        --ink: #F4ECF0;
-        --muted: #AE9CA5;
-        --line: #33282E;
-        --line-strong: #4A3C43;
-        --cherry: #FF5C7E;
-        --cherry-wash: #3A1A24;
-        --stem: #5FCB8E;
-        --stem-wash: #17301F;
-        --track: #2C2328;
-        --focus: #FF5C7E;
+        --paper: #101115;
+        --panel: #17181E;
+        --ink: #E8E9EF;
+        --muted: #9A9CAA;
+        --line: #25262E;
+        --line-strong: #363843;
+        --cherry: #FF5575;
+        --cherry-wash: #2A1219;
+        --stem: #3DD68C;
+        --stem-wash: #10291E;
+        --track: #23242B;
+        --focus: #FF5575;
+        --glow: rgba(227, 50, 85, 0.35);
     }
 }
 
 :root[data-theme="dark"] {
     color-scheme: dark;
-    --paper: #161013;
-    --panel: #1F181C;
-    --ink: #F4ECF0;
-    --muted: #AE9CA5;
-    --line: #33282E;
-    --line-strong: #4A3C43;
-    --cherry: #FF5C7E;
-    --cherry-wash: #3A1A24;
-    --stem: #5FCB8E;
-    --stem-wash: #17301F;
-    --track: #2C2328;
-    --focus: #FF5C7E;
+    --paper: #101115;
+    --panel: #17181E;
+    --ink: #E8E9EF;
+    --muted: #9A9CAA;
+    --line: #25262E;
+    --line-strong: #363843;
+    --cherry: #FF5575;
+    --cherry-wash: #2A1219;
+    --stem: #3DD68C;
+    --stem-wash: #10291E;
+    --track: #23242B;
+    --focus: #FF5575;
+    --glow: rgba(227, 50, 85, 0.35);
 }
 
 /* 2. Base ------------------------------------------------------------------- */
@@ -324,15 +346,15 @@ table td.num {
     min-height: 2.75rem;
     padding: 0 1.1rem;
     border-radius: var(--radius-control);
-    border: 1px solid var(--ink);
-    background: var(--ink);
-    color: var(--paper);
+    border: 1px solid var(--button-bg);
+    background: var(--button-bg);
+    color: #fff;
     font: 600 0.95rem/1 var(--font-ui);
     text-decoration: none;
     cursor: pointer;
 }
 
-.button:hover { opacity: 0.88; }
+.button:hover { background: var(--button-hover); border-color: var(--button-hover); box-shadow: 0 6px 20px -8px var(--glow); }
 .button:disabled { opacity: 0.55; cursor: progress; }
 
 .button--quiet {
@@ -344,10 +366,13 @@ table td.num {
 .button--quiet:hover { background: var(--track); opacity: 1; }
 
 .button--danger {
-    background: var(--cherry);
+    /* Outlined, so it never gets confused with the main red action button. */
+    background: transparent;
     border-color: var(--cherry);
-    color: #fff;
+    color: var(--cherry);
 }
+
+.button--danger:hover { background: var(--button-bg); border-color: var(--button-bg); color: #fff; }
 
 .button--small { min-height: 2.25rem; padding: 0 0.75rem; font-size: 0.875rem; }
 .button--block { width: 100%; }
@@ -536,7 +561,7 @@ fieldset.field { border: 0; padding: 0; margin: 0 0 1.1rem; min-width: 0; }
 }
 
 .bar__track { fill: var(--track); }
-.bar--neutral .bar__fill { fill: var(--ink); }
+.bar--neutral .bar__fill { fill: var(--ink); opacity: 0.8; }   /* red is kept for "over budget" */
 .bar--in .bar__fill { fill: var(--stem); }
 .bar--over .bar__fill { fill: var(--cherry); }
 .bar--done .bar__fill { fill: var(--stem); }
@@ -761,3 +786,77 @@ details.data-table summary { cursor: pointer; color: var(--muted); font-size: 0.
 @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
 }
+
+
+/* 7. WebCherry brand layer ---------------------------------------------------------
+   Shared look across WebCherry apps: dark #101115 base, cherry glow, thin hairlines,
+   Space Grotesk headings, JetBrains Mono for technical bits and figures in tables. */
+
+h1, h2, h3 { letter-spacing: -0.015em; font-weight: 700; }
+
+/* A faint grid and a cherry glow behind everything (dark theme only). */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) body {
+        background-image:
+            radial-gradient(900px 520px at 85% -10%, rgba(227, 50, 85, 0.16), transparent 70%),
+            linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+        background-size: auto, 48px 48px, 48px 48px;
+        background-attachment: fixed;
+    }
+}
+
+:root[data-theme="dark"] body {
+    background-image:
+        radial-gradient(900px 520px at 85% -10%, rgba(227, 50, 85, 0.16), transparent 70%),
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    background-size: auto, 48px 48px, 48px 48px;
+    background-attachment: fixed;
+}
+
+/* Brand lock-up: product name in Space Grotesk, "BY WEBCHERRY" in mono caps. */
+.brand__name { font-weight: 700; letter-spacing: -0.02em; }
+.brand__by {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--cherry);
+    margin-top: 0.2rem;
+}
+
+.sidebar { background: color-mix(in srgb, var(--panel) 70%, transparent); backdrop-filter: blur(8px); }
+
+.nav a[aria-current="page"] {
+    background: color-mix(in srgb, var(--cherry) 10%, transparent);
+    box-shadow: inset 3px 0 0 var(--cherry);
+}
+
+.panel {
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 100%, transparent), color-mix(in srgb, var(--panel) 88%, var(--paper)));
+}
+
+.auth-card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+    background: var(--panel);
+    box-shadow: 0 30px 80px -40px var(--glow);
+}
+
+/* Figures in tables and the small technical bits use the mono face. */
+.ledger .num,
+.ledger .date,
+.tag,
+.recent__meta { font-family: var(--font-mono); font-size: 0.9em; }
+
+.hero__figure { letter-spacing: -0.03em; }
+
+.button--quiet { background: transparent; color: var(--ink); border-color: var(--line-strong); }
+.button--quiet:hover { background: var(--track); border-color: var(--line-strong); box-shadow: none; }
+
+.input:focus,
+.select:focus { box-shadow: 0 0 0 3px var(--glow); }
+
+hr.rule { border: 0; border-top: 1px solid var(--line); margin: 1.5rem 0; }

@@ -20,7 +20,7 @@ public class UserSettings
 /// </summary>
 public static class PreferenceOptions
 {
-    public const string DefaultTheme = "system";
+    public const string DefaultTheme = "dark";   // WebCherry apps are dark-first
     public const string DefaultCurrency = "GBP";
 
     public static readonly IReadOnlyList<string> Themes = ["system", "light", "dark"];
