@@ -12,7 +12,7 @@
 #  Tip: pin both FROM lines by digest (image@sha256:...) and let Dependabot bump them.
 # =============================================================================
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 WORKDIR /src
 
 # Restore first (cached unless the project file changes), then copy the rest and publish.
