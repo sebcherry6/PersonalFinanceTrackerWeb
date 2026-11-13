@@ -23,7 +23,7 @@ COPY PersonalFinanceTracker.Web/ PersonalFinanceTracker.Web/
 RUN dotnet publish PersonalFinanceTracker.Web/PersonalFinanceTracker.Web.csproj \
     --configuration Release --no-restore --output /app /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS final
 WORKDIR /app
 
 ENV ASPNETCORE_ENVIRONMENT=Production \
