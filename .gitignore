@@ -1,6 +1,7 @@
 # Build output
 bin/
 obj/
+tools/
 
 # Visual Studio / Rider / VS Code
 .vs/
